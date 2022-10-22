@@ -1,0 +1,175 @@
+#!/bin/bash
+
+while true
+do
+
+#Logo
+echo "================================================================="
+echo "███████╗██╗   ██╗██████╗ ███████╗██████╗  █████╗  ██████╗███████╗"
+echo "██╔════╝██║   ██║██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝"
+echo "███████╗██║   ██║██████╔╝███████╗██████╔╝███████║██║     █████╗  "
+echo "╚════██║██║   ██║██╔══██╗╚════██║██╔═══╝ ██╔══██║██║     ██╔══╝  "
+echo "███████║╚██████╔╝██████╔╝███████║██║     ██║  ██║╚██████╗███████╗"
+echo "╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝     ╚═╝  ╚═╝ ╚═════╝╚══════╝"
+echo "================================================================="
+echo -e "https://subspace.network/"
+echo "================================================================="
+
+# Menu
+
+PS3='Select an action: '
+options=(
+"Install and run Node(Update)"
+"Restart Farmer and Node"
+"Log Node"
+"Log Farmer"
+"Search in node logs"
+"Search in farmer logs"
+"Wipe Farmer and Purge-chain"
+"Delete Node"
+"Exit")
+select opt in "${options[@]}"
+do
+case $opt in
+
+
+"Install and run Node(Update)")
+echo "============================================================"
+echo "Write the name of your node"
+echo "============================================================"
+read NODENAME
+echo 'export NODENAME='$NODENAME >> /mnt/hdd2/.bash_profile
+echo "============================================================"
+echo "Enter your wallet address"
+echo "============================================================"
+read WALLETADDRESS
+echo 'export WALLETADDRESS='$WALLETADDRESS >> /mnt/hdd2/.bash_profile
+echo "============================================================"
+echo "Write plot size for farmer(100G maximum)"
+echo "============================================================"
+read PLOTSIZE
+echo 'export PLOTSIZE='$PLOTSIZE >> /mnt/hdd2/.bash_profile
+source /mnt/hdd2/.bash_profile
+
+apt install jq
+
+mkdir /subspace; \
+cd /subspace && \
+wget https://github.com/subspace/subspace/releases/download/gemini-2a-2022-oct-06/subspace-farmer-ubuntu-x86_64-gemini-2a-2022-oct-06 -O farmer && \
+wget https://github.com/subspace/subspace/releases/download/gemini-2a-2022-oct-06/subspace-node-ubuntu-x86_64-gemini-2a-2022-oct-06 -O subspace && \
+sudo chmod +x * && \
+sudo mv * /mnt/hdd2/ && \
+cd /mnt/hdd2 && \
+rm -Rvf /mnt/hdd2/subspace
+
+sudo tee <<EOF >/dev/null /mnt/hdd2/subspace.service
+[Unit]
+Description=Subspace Node
+After=network.target
+[Service]
+Type=simple
+User=$USER
+ExecStart=$(which subspace) \\
+--chain="gemini-2a" \\
+--execution="wasm" \\
+--state-pruning="archive" \\
+--validator \\
+--name="$NODENAME"
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65535
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo tee <<EOF >/dev/null /mnt/hdd2/subspacefarm.service
+[Unit]
+Description=Subspace Farmer
+After=network.target
+[Service]
+Type=simple
+User=$USER
+ExecStart=$(which farmer) farm \\
+--reward-address=$WALLETADDRESS \\
+--plot-size=$PLOTSIZE
+Restart=always
+RestartSec=10
+LimitNOFILE=65535
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl restart systemd-journald
+sudo systemctl daemon-reload
+sudo systemctl enable subspace subspacefarm
+sudo systemctl restart subspacefarm subspace
+
+break
+;;
+
+"Delete Node")
+
+systemctl stop subspace subspacefarm
+systemctl disable subspace subspacefarm
+rm /mnt/hdd2/subspace.service
+rm /mnt/hdd2/subspacefarm.service
+rm -r /mnt/hdd2/subspace
+rm -r /mnt/hdd2/farmer
+rm -r /mnt/hdd2/subspace-farmer
+rm -r /mnt/hdd2/subspace-node
+
+break
+;;
+
+"Log Node")
+sudo journalctl -n 100 -f -u subspace
+break
+;;
+
+"Log Farmer")
+sudo journalctl -n 100 -f -u subspacefarm
+break
+;;
+
+"Wipe Farmer and Purge-chain")
+systemctl stop subspace subspacefarm
+farmer wipe
+subspace purge-chain --chain gemini-2a -y
+sudo systemctl restart subspacefarm subspace
+break
+;;
+
+"Restart Farmer and Node")
+sudo systemctl restart subspacefarm subspace
+break
+;;
+
+"Search in node logs")
+echo "============================================================"
+echo "Enter a keyword or phrase to search"
+echo "============================================================"
+read KEYWORD
+echo -e "\n\033[32m =========================SEARCH RESULTS========================= \033[0m"
+sudo journalctl -u subspace -o cat | grep "$KEYWORD"
+echo -e "\n\033[32m ================================================================ \033[0m"
+break
+;;
+
+"Search in farmer logs")
+echo "============================================================"
+echo "Enter a keyword or phrase to search"
+echo "============================================================"
+read KEYWORD
+echo -e "\n\033[32m =========================SEARCH RESULTS========================= \033[0m"
+sudo journalctl -u subspacefarm -o cat | grep "$KEYWORD"
+echo -e "\n\033[32m ================================================================ \033[0m"
+break
+;;
+
+"Exit")
+exit
+;;
+*) echo "invalid option $REPLY";;
+esac
+done
+done
