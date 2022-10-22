@@ -38,23 +38,23 @@ echo "============================================================"
 echo "Write the name of your node"
 echo "============================================================"
 read NODENAME
-echo 'export NODENAME='$NODENAME >> /mnt/hdd2/.bash_profile
+echo 'export NODENAME='$NODENAME >> $HOME/.bash_profile
 echo "============================================================"
 echo "Enter your wallet address"
 echo "============================================================"
 read WALLETADDRESS
-echo 'export WALLETADDRESS='$WALLETADDRESS >> /mnt/hdd2/.bash_profile
+echo 'export WALLETADDRESS='$WALLETADDRESS >> $HOME/.bash_profile
 echo "============================================================"
 echo "Write plot size for farmer(100G maximum)"
 echo "============================================================"
 read PLOTSIZE
-echo 'export PLOTSIZE='$PLOTSIZE >> /mnt/hdd2/.bash_profile
-source /mnt/hdd2/.bash_profile
+echo 'export PLOTSIZE='$PLOTSIZE >> $HOME/.bash_profile
+source $HOME/.bash_profile
 
 apt install jq
 
-mkdir /subspace; \
-cd /subspace && \
+mkdir /mnt/hdd2/subspace; \
+cd /mnt/hdd2/subspace && \
 wget https://github.com/subspace/subspace/releases/download/gemini-2a-2022-oct-06/subspace-farmer-ubuntu-x86_64-gemini-2a-2022-oct-06 -O farmer && \
 wget https://github.com/subspace/subspace/releases/download/gemini-2a-2022-oct-06/subspace-node-ubuntu-x86_64-gemini-2a-2022-oct-06 -O subspace && \
 sudo chmod +x * && \
