@@ -59,7 +59,7 @@ wget https://github.com/subspace/subspace/releases/download/gemini-2a-2022-oct-0
 wget https://github.com/subspace/subspace/releases/download/gemini-2a-2022-oct-06/subspace-node-ubuntu-x86_64-gemini-2a-2022-oct-06 -O subspace && \
 sudo chmod +x * && \
 sudo mv * /mnt/hdd2/ && \
-cd /mnt/hdd2 && \
+cd / && \
 rm -Rvf /mnt/hdd2/subspace
 
 sudo tee <<EOF >/dev/null /mnt/hdd2/subspace.service
